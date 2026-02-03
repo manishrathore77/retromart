@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 50px;
+      background-color: #f2f2f2;
+    }
+    h2 {
+      text-align: center;
+    }
+    form {
+      width: 300px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: teal;
+      color: white;
+      border: none;
+    }
+    .message {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>User Registration</h2>
+  <form id="registerForm">
+    <input type="text" name="name" placeholder="Full Name" required />
+    <input type="email" name="email" placeholder="Email" required />
+    <input type="text" name="phone" placeholder="Phone" />
+    <input type="password" name="password" placeholder="Password" required />
+    <select name="userType" required>
+      <option value="">Select Role</option>
+      <option value="buyer">Buyer</option>
+      <option value="seller">Seller</option>
+    </select>
+    <button type="submit">Register</button>
+    <div class="message" id="message"></div>
+  </form>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const user = {
+        name: form.name.value,
+        email: form.email.value,
+        phone: form.phone.value,
+        password: form.password.value,
+        userType: form.userType.value
+      };
+
+      const res = await fetch("/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(user)
+      });
+
+      const message = document.getElementById("message");
+      if (res.ok) {
+        const text = await res.text();
+        message.textContent = text;
+        message.style.color = "green";
+        form.reset();
+      } else {
+        const error = await res.text();
+        message.textContent = error;
+        message.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>

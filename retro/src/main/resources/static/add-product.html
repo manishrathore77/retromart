@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Product + 5 Images</title>
+  <style>
+    body{font-family:Arial;background:#f2f2f2;margin:40px}
+    form{width:380px;margin:auto;background:#fff;padding:25px;border-radius:10px;
+         box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    input,textarea,button{width:100%;padding:12px;margin:10px 0;border:1px solid #ccc;border-radius:6px}
+    button{background:teal;color:#fff;border:none;cursor:pointer}
+    button:hover{background:#006d6d}
+    .msg{text-align:center;margin-top:15px;font-weight:bold}
+  </style>
+</head>
+<body>
+<h2 style="text-align:center">Add Product (exactly 5 images)</h2>
+
+<form id="productForm" enctype="multipart/form-data">
+  <input type="text"     name="title"       placeholder="Product Title" required>
+  <textarea              name="description" placeholder="Description"></textarea>
+  <input type="number"   name="price"       placeholder="Price" required>
+
+  <label><strong>Upload 5 product images</strong></label>
+  <input class="imageInp" type="file" accept="image/*" required>
+  <input class="imageInp" type="file" accept="image/*" required>
+  <input class="imageInp" type="file" accept="image/*" required>
+  <input class="imageInp" type="file" accept="image/*" required>
+  <input class="imageInp" type="file" accept="image/*" required>
+
+  <button type="submit">Add Product</button>
+  <div class="msg" id="msg"></div>
+</form>
+
+<script>
+async function ensureSession(){
+  const res = await fetch("/api/users/session");
+  if(res.ok) return;              // user is logged‑in seller
+  alert("Please login first");    // not logged‑in
+  window.location.href = "login.html";
+}
+ensureSession();                  // check immediately
+
+document.getElementById("productForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+
+  const files = [...document.querySelectorAll(".imageInp")].map(i=>i.files[0]).filter(Boolean);
+  if(files.length !== 5){ alert("Select exactly 5 images"); return; }
+
+  const pBody = {
+    title:       e.target.title.value,
+    description: e.target.description.value,
+    price:       parseFloat(e.target.price.value)
+  };
+
+  const msg = document.getElementById("msg");
+  msg.textContent = "Uploading…"; msg.style.color = "black";
+
+  try{
+    /* 1️⃣ create product (sellerId set in controller via session) */
+    const pRes = await fetch("/api/products",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(pBody)
+    });
+    if(!pRes.ok) throw new Error(await pRes.text());
+    const { productId } = await pRes.json();
+
+    /* 2️⃣ upload images */
+    for(const f of files){
+      const fd = new FormData(); fd.append("file",f);
+      const up = await fetch("/api/upload/"+productId,{method:"POST",body:fd});
+      if(!up.ok) throw new Error("image upload failed");
+    }
+
+    msg.textContent = "✅ Product & images saved!";
+    msg.style.color = "green";
+    e.target.reset();
+  }catch(err){
+    msg.textContent = "❌ "+err.message;
+    msg.style.color = "red";
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Product Details</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f9f9f9;
+      padding: 30px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+      text-align: center;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .price {
+      color: green;
+      font-size: 20px;
+      margin: 10px 0;
+    }
+    .desc {
+      margin: 15px 0;
+      line-height: 1.5;
+    }
+    .gallery-container {
+      position: relative;
+      margin-top: 20px;
+    }
+    .gallery-container img {
+      width: 300px;
+      height: auto;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    .gallery-buttons {
+      margin-top: 10px;
+    }
+    .gallery-buttons button {
+      padding: 10px 15px;
+      margin: 0 5px;
+      border: none;
+      background: teal;
+      color: white;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .buy-btn {
+      margin-top: 25px;
+      background: #006d6d;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title" id="title">Loading...</div>
+  <div class="price" id="price"></div>
+  <div class="desc" id="description"></div>
+
+  <div class="gallery-container">
+    <img id="galleryImage" src="" alt="Product Image" />
+    <div class="gallery-buttons">
+      <button onclick="prevImage()">Prev</button>
+      <button onclick="nextImage()">Next</button>
+    </div>
+  </div>
+
+  <button class="buy-btn" onclick="buyProduct()">Buy Now</button>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get("pid");
+  let images = [];
+  let currentIndex = 0;
+
+  async function loadProduct() {
+    try {
+      const pRes = await fetch(`/api/products/${productId}`);
+      if (!pRes.ok) throw new Error("Product not found");
+      const product = await pRes.json();
+
+      document.getElementById("title").textContent = product.title;
+      document.getElementById("price").textContent = "₹ " + product.price;
+      document.getElementById("description").textContent = product.description;
+
+      const imgRes = await fetch(`/api/images/product/${productId}`);
+      images = await imgRes.json();
+
+      if (images.length > 0) {
+        currentIndex = 0;
+        updateImage();
+      } else {
+        document.getElementById("galleryImage").alt = "No image found";
+      }
+    } catch (err) {
+      document.querySelector(".container").innerHTML = "<h3>❌ Product not found</h3>";
+    }
+  }
+
+  function updateImage() {
+    const img = images[currentIndex];
+    if (img && img.imageUrl) {
+      const imgEl = document.getElementById("galleryImage");
+      imgEl.src = img.imageUrl.startsWith("http") ? img.imageUrl : img.imageUrl;
+    }
+  }
+
+  function prevImage() {
+    if (images.length > 0) {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      updateImage();
+    }
+  }
+
+  function nextImage() {
+    if (images.length > 0) {
+      currentIndex = (currentIndex + 1) % images.length;
+      updateImage();
+    }
+  }
+
+  function buyProduct() {
+    window.location.href = `place-order.html?pid=${productId}`;
+  }
+
+  loadProduct();
+</script>
+
+</body>
+</html>
