@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Place Order</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 650px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .product-box {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+      border: 1px solid #eee;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .product-box img {
+      width: 140px;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .product-details h3 {
+      margin: 0 0 10px;
+    }
+    .product-details p {
+      margin: 4px 0;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    button {
+      background: teal;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #006d6d;
+    }
+    .msg {
+      text-align: center;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Order Summary</h2>
+
+    <div class="product-box" id="productBox">
+      <!-- Product image and details go here -->
+    </div>
+
+    <form id="orderForm">
+      <input type="text" name="phone" placeholder="Contact Phone" required />
+      <textarea name="address" placeholder="Shipping Address" required></textarea>
+      <button type="submit">Continue to Pay</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = parseInt(urlParams.get("pid"));
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+const buyerId = user.userId;
+
+    if (!buyerId) {
+      alert("Please login first");
+      window.location.href = "login.html";
+    }
+
+    async function loadProduct() {
+      const res = await fetch(`/api/products/${productId}`);
+      const p = await res.json();
+
+      const imgRes = await fetch(`/api/images/product/${productId}`);
+      const imgs = await imgRes.json();
+
+      const div = document.getElementById("productBox");
+      div.innerHTML = `
+        <img src="${imgs[0]?.imageUrl || 'https://via.placeholder.com/150'}" alt="${p.title}" />
+        <div class="product-details">
+          <h3>${p.title}</h3>
+          <p><strong>₹${p.price}</strong></p>
+          <p>${p.description}</p>
+        </div>
+      `;
+    }
+
+    loadProduct();
+
+    document.getElementById("orderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+      const order = {
+        buyerId,
+        productId,
+        shippingAddress: form.address.value,
+        contactPhone: form.phone.value,
+        paymentStatus: "pending",
+        deliveryStatus: "processing",
+        paymentMode: "Razorpay",
+        transactionId: ""
+      };
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order)
+      });
+
+      const msg = document.getElementById("msg");
+
+      if (res.ok) {
+        msg.textContent = "✅ Order placed! Redirecting to payment...";
+        msg.style.color = "green";
+        setTimeout(() => {
+          window.location.href = "payment.html";
+        }, 1500);
+      } else {
+        const error = await res.text();
+        msg.textContent = "❌ " + error;
+        msg.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>
