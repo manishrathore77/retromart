@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Orders</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+      padding: 40px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #006d6d;
+      color: white;
+    }
+    tr:hover {
+      background: #f1f1f1;
+    }
+    .status {
+      font-weight: bold;
+    }
+    .status.paid { color: green; }
+    .status.pending { color: orange; }
+    .status.failed { color: red; }
+    .status.delivered { color: teal; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🛒 My Orders</h2>
+    <table id="ordersTable">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Product Title</th>
+          <th>Payment</th>
+          <th>Delivery</th>
+          <th>Order Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Orders go here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const buyerId = JSON.parse(localStorage.getItem("user"))?.userId;
+    if (!buyerId) {
+      alert("Login first to see orders");
+      window.location.href = "login.html";
+    }
+
+    async function loadOrders() {
+      const res = await fetch(`/api/orders/buyer/${buyerId}`);
+      const orders = await res.json();
+
+      const tbody = document.querySelector("#ordersTable tbody");
+      tbody.innerHTML = "";
+
+      for (const order of orders) {
+        const pRes = await fetch(`/api/products/${order.productId}`);
+        const product = await pRes.json();
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${order.orderId}</td>
+          <td>${product.title}</td>
+          <td class="status ${order.paymentStatus.toLowerCase()}">${order.paymentStatus}</td>
+          <td class="status ${order.deliveryStatus.toLowerCase()}">${order.deliveryStatus}</td>
+          <td>${new Date(order.orderDate).toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>
