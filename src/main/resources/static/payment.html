@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pay with Razorpay</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
+      text-align: center;
+      padding: 40px;
+    }
+    h2 { margin-bottom: 30px; }
+    button {
+      padding: 15px 25px;
+      font-size: 16px;
+      background: teal;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .msg {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Confirm Payment</h2>
+  <button onclick="startPayment()">Pay Now</button>
+  <div class="msg" id="msg"></div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const amount = parseFloat(urlParams.get("amount")) || 100; // ₹ by default
+    const orderId = parseInt(urlParams.get("orderId"));
+
+    const buyer = JSON.parse(localStorage.getItem("user"));
+
+    async function startPayment() {
+      const res = await fetch("/api/payment/razorpay-order", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ amount })
+      });
+
+      if (!res.ok) {
+        document.getElementById("msg").textContent = "❌ Razorpay order failed";
+        return;
+      }
+
+      const { orderId: razorId, key } = await res.json();
+
+      const options = {
+        key,
+        amount: amount * 100,
+        currency: "INR",
+        name: "Retro Shop",
+        description: "Product Payment",
+        image: "https://avatars.githubusercontent.com/u/10338863?s=200&v=4",
+        order_id: razorId,
+        handler: async function (response) {
+          // 🔄 Update order in DB
+          const txnRes = await fetch(`/api/orders/${orderId}/confirm`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              transactionId: response.razorpay_payment_id,
+              paymentStatus: "paid"
+            })
+          });
+
+          if (txnRes.ok) {
+            document.getElementById("msg").textContent = "✅ Payment successful!";
+          } else {
+            document.getElementById("msg").textContent = "❌ Failed to confirm order";
+          }
+        },
+        prefill: {
+          name: buyer?.name || "Guest",
+          email: buyer?.email || "",
+          contact: buyer?.phone || ""
+        },
+        theme: { color: "#3399cc" }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    }
+  </script>
+</body>
+</html>
