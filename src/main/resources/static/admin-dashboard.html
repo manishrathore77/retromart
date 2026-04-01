@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: teal;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin: 40px;
+    }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .card p {
+      font-size: 26px;
+      color: teal;
+      font-weight: bold;
+    }
+    .card button {
+      margin-top: 15px;
+      background: #006d6d;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    .content-section {
+      background: white;
+      max-width: 90%;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background: teal;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">Admin Dashboard</div>
+
+<div class="dashboard">
+  <div class="card">
+    <h3>Total Users</h3>
+    <p id="userCount">--</p>
+    <button onclick="loadUsers()">View Users</button>
+  </div>
+  <div class="card">
+    <h3>Total Products</h3>
+    <p id="productCount">--</p>
+    <button onclick="loadProducts()">View Products</button>
+  </div>
+  <div class="card">
+    <h3>Total Orders</h3>
+    <p id="orderCount">--</p>
+    <button onclick="loadOrders()">View Orders</button>
+  </div>
+</div>
+
+<div class="content-section" id="contentSection">
+  <p style="text-align:center;">Click on a button above to view more details.</p>
+</div>
+
+<script>
+  async function loadDashboard() {
+    try {
+      const [u, p, o] = await Promise.all([
+        fetch("/api/users").then(res => res.json()),
+        fetch("/api/products").then(res => res.json()),
+        fetch("/api/orders").then(res => res.json())
+      ]);
+
+      document.getElementById("userCount").textContent = u.length;
+      document.getElementById("productCount").textContent = p.length;
+      document.getElementById("orderCount").textContent = o.length;
+    } catch (err) {
+      console.error("Dashboard load error", err);
+    }
+  }
+
+  async function loadUsers() {
+    const res = await fetch("/api/users");
+    const users = await res.json();
+    let html = `<h3>All Users</h3><table><tr><th>ID</th><th>Name</th><th>Email</th><th>Type</th></tr>`;
+    for (let u of users) {
+      html += `<tr><td>${u.userId}</td><td>${u.name}</td><td>${u.email}</td><td>${u.userType}</td></tr>`;
+    }
+    html += "</table>";
+    document.getElementById("contentSection").innerHTML = html;
+  }
+
+  async function loadProducts() {
+    const res = await fetch("/api/products");
+    const products = await res.json();
+    let html = `<h3>All Products</h3><table><tr><th>ID</th><th>Title</th><th>Price</th><th>Seller</th></tr>`;
+    for (let p of products) {
+      html += `<tr><td>${p.productId}</td><td>${p.title}</td><td>₹${p.price}</td><td>${p.sellerId}</td></tr>`;
+    }
+    html += "</table>";
+    document.getElementById("contentSection").innerHTML = html;
+  }
+
+  async function loadOrders() {
+    const res = await fetch("/api/orders");
+    const orders = await res.json();
+    let html = `<h3>All Orders</h3><table><tr><th>ID</th><th>Product ID</th><th>Buyer</th><th>Payment</th><th>Delivery</th></tr>`;
+    for (let o of orders) {
+      html += `<tr><td>${o.orderId}</td><td>${o.productId}</td><td>${o.buyerId}</td><td>${o.paymentStatus}</td><td>${o.deliveryStatus}</td></tr>`;
+    }
+    html += "</table>";
+    document.getElementById("contentSection").innerHTML = html;
+  }
+
+  loadDashboard();
+</script>
+
+</body>
+</html>
