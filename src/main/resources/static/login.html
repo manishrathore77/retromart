@@ -33,6 +33,22 @@
     button:hover {
       background: #006666;
     }
+    .google-btn {
+      background: white;
+      color: #444;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 15px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .google-btn img {
+      width: 20px;
+      height: 20px;
+    }
     .message {
       text-align: center;
       margin-top: 10px;
@@ -48,6 +64,14 @@
     <button type="submit">Login</button>
     <div class="message" id="loginMsg"></div>
   </form>
+
+  <!-- Google OAuth Button -->
+  <div style="width:300px; margin: 20px auto; text-align: center;">
+    <a href="/oauth2/authorization/google" class="google-btn">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon" />
+      <span>Sign in with Google</span>
+    </a>
+  </div>
 
   <script>
     document.getElementById("loginForm").addEventListener("submit", async function(e) {
