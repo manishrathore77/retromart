@@ -29,7 +29,7 @@ public ResponseEntity<?> login(@RequestBody User user, HttpSession session) {
     try {
         User existing = userDAO.validateLogin(user.getEmail(), user.getPassword());
         if (existing != null) {
-            session.setAttribute("currentUser", existing);
+            session.setAttribute("currentUser", existing); // ✅ store user in session
             return ResponseEntity.ok(existing);
         }
         return ResponseEntity.status(401).body("Invalid credentials");
@@ -37,6 +37,7 @@ public ResponseEntity<?> login(@RequestBody User user, HttpSession session) {
         return ResponseEntity.status(500).body(e.getMessage());
     }
 }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getById(@PathVariable int id) {
@@ -57,4 +58,42 @@ public ResponseEntity<?> login(@RequestBody User user, HttpSession session) {
             return ResponseEntity.status(500).build();
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable int id, @RequestBody User user) {
+        try {
+           // user.userId = id; 
+          user.setUserId(id); 
+            boolean ok = userDAO.updateUser(user);
+            return ok ? ResponseEntity.ok("Updated")
+                      : ResponseEntity.notFound().build();
+        } catch (SQLException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable int id) {
+        try {
+            boolean ok = userDAO.deleteUser(id);
+            return ok ? ResponseEntity.ok("Deleted")
+                      : ResponseEntity.notFound().build();
+        } catch (SQLException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+@PostMapping("/logout")
+public ResponseEntity<String> logout(HttpSession session) {
+    session.invalidate(); // clear session
+    return ResponseEntity.ok("Logged out successfully");
+}
+
+@GetMapping("/session")
+public ResponseEntity<?> getSessionUser(HttpSession session) {
+    User user = (User) session.getAttribute("currentUser");
+    if (user != null) return ResponseEntity.ok(user);
+    return ResponseEntity.status(401).body("No active session");
+}
+
+
 }
