@@ -347,6 +347,43 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 - Mount or back up the `uploads/` directory.
 - Replace plaintext password storage with hashing (for example BCrypt) before handling real users.
 
+## Deploying the Frontend to Vercel
+
+Vercel cannot run the Spring Boot backend. It is a serverless/static platform with no Java runtime, no always-on server, no bundled MySQL, and no persistent writable disk for uploads. The backend must therefore be hosted on a Java-friendly platform (Railway, Render, Fly.io, or any VM/container host) as described above.
+
+What you can do on Vercel is host the static frontend and proxy API and image requests to your separately-hosted backend. The included `vercel.json` does exactly that, so the browser still sees a single origin and session cookies and relative paths keep working without any frontend code changes.
+
+Steps:
+
+1. Deploy the Spring Boot app somewhere with a public HTTPS URL (see Deployment above). Note that URL, for example `https://retromart-api.onrender.com`.
+2. Edit `vercel.json` and replace `https://your-backend-host.example.com` in both rewrite rules with your backend URL.
+
+   ```json
+   {
+     "outputDirectory": "src/main/resources/static",
+     "rewrites": [
+       { "source": "/api/:path*", "destination": "https://retromart-api.onrender.com/api/:path*" },
+       { "source": "/uploads/:path*", "destination": "https://retromart-api.onrender.com/uploads/:path*" }
+     ]
+   }
+   ```
+
+3. Import the repository in the Vercel dashboard, or deploy with the CLI:
+
+   ```bash
+   npm i -g vercel
+   vercel        # preview deploy
+   vercel --prod # production deploy
+   ```
+
+   Vercel serves the files in `src/main/resources/static` directly. `/` resolves to `index.html`; all `/api/*` and `/uploads/*` requests are transparently proxied to the backend.
+
+Notes and caveats:
+
+- The backend must allow the Razorpay and OAuth flows over HTTPS, and its Google OAuth redirect URI must point at your Vercel domain if you use OAuth.
+- Because requests are proxied through the same origin, no CORS configuration is needed. If you instead call the backend directly from the browser (without the proxy), you must enable CORS and configure cross-site session cookies (`SameSite=None; Secure`).
+- Uploaded images are stored on the backend's disk, so persist that directory on the backend host; Vercel does not store them.
+
 ## Security Notes
 
 - Passwords are currently stored and compared in plaintext. This is acceptable for a learning project but must be replaced with a password hashing scheme before any real deployment.

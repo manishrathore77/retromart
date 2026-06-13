@@ -1,0 +1,10 @@
+target/
+src/main/java/
+src/test/
+uploads/
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml
+filter.sh
