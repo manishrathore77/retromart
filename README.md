@@ -311,9 +311,18 @@ The artifact is written to `target/retro-0.0.1-SNAPSHOT.jar`.
 
 ### 2. Externalize configuration
 
-Avoid baking secrets and database credentials into the image. Spring Boot lets you override any property with an environment variable or a `--` argument. The database credentials currently live in `RetroConnection.java`; for production, refactor them to read from properties or environment variables and then supply them externally.
+Avoid baking secrets and database credentials into the image. The database connection in `RetroConnection.java` reads from environment variables, falling back to the local defaults (`localhost:3306`, `retrodb`, `retrouser`) only when those variables are not set. The supported variables are:
 
-Example using environment-driven properties:
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `DB_HOST` or `MYSQLHOST` | Database host | `localhost` |
+| `DB_PORT` or `MYSQLPORT` | Database port | `3306` |
+| `DB_NAME` or `MYSQLDATABASE` | Database name | `retrodb` |
+| `DB_USER` or `MYSQLUSER` | Database user | `retrouser` |
+| `DB_PASSWORD` or `MYSQLPASSWORD` | Database password | `retrouser` |
+| `JDBC_URL` | Full JDBC URL (overrides all of the above) | unset |
+
+The `MYSQL*` names match the variables that Railway's MySQL plugin injects automatically, so a Railway deployment with a linked MySQL service needs no manual database configuration. Razorpay keys are still supplied as Spring properties:
 
 ```bash
 java -jar target/retro-0.0.1-SNAPSHOT.jar \
@@ -322,6 +331,16 @@ java -jar target/retro-0.0.1-SNAPSHOT.jar \
   --razorpay.demo-mode=false \
   --server.port=8080
 ```
+
+### Deploying to Railway (backend)
+
+1. Create a new Railway project and deploy this repository. Railway detects the Maven build and runs the resulting JAR.
+2. Add a MySQL database to the same project. Railway injects `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, and `MYSQLPASSWORD`, which the app reads automatically.
+3. Create the schema (the tables under Local Setup) in the Railway MySQL instance, using Railway's database console or any MySQL client pointed at the public connection details.
+4. Add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and set `razorpay.demo-mode` as needed via service variables.
+5. Redeploy. The API endpoints under `/api/**` should now return data instead of HTTP 500.
+
+A 500 from every `/api/**` endpoint while the homepage loads is the classic symptom of the app failing to reach the database, usually because the MySQL service is missing, the schema was never created, or the connection variables are not set.
 
 ### 3. Run as a service
 
@@ -389,7 +408,7 @@ Notes and caveats:
 - Passwords are currently stored and compared in plaintext. This is acceptable for a learning project but must be replaced with a password hashing scheme before any real deployment.
 - CSRF protection is disabled in `SecurityConfig` to simplify the API. Re-enable and configure it if you expose this beyond a trusted environment.
 - Do not commit Razorpay or Google OAuth secrets. Move them to environment variables or an untracked properties file, and rotate any key that has been committed.
-- The JDBC credentials are hardcoded in `RetroConnection.java`; externalize them for any shared or production environment.
+- The JDBC credentials default to `retrouser`/`retrouser` against `localhost` when no environment variables are set. Always supply real credentials through the environment variables listed above in shared or production environments, and use a strong database password.
 
 ## License
 
