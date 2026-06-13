@@ -1,136 +1,74 @@
-<div align="center">
+# RetroMart
 
-# 📼 RetroMart 🕹️
+RetroMart is a full-stack, retro-themed e-commerce marketplace where buyers and sellers trade vintage items. It pairs a Spring Boot REST API with a server-rendered storefront built from plain HTML, CSS, and JavaScript, and integrates Razorpay for UPI, card, and netbanking payments.
 
-### *The Radical Marketplace for All Things Retro!*
+The entire application (API and frontend) is served by a single Spring Boot process on port 8080.
 
-> *"Where every pixel has a story and every product has a vibe"* 🌈✨
+## Tech Stack
 
-[![Java](https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=for-the-badge&logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Razorpay](https://img.shields.io/badge/Razorpay-UPI_&_Cards-3395FF?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+| Layer | Technology |
+|-------|------------|
+| Backend | Spring Boot 3.4 (Java 17), Spring MVC |
+| Security | Spring Security + Google OAuth 2.0, HTTP session auth |
+| Database | MySQL 8 accessed through raw JDBC DAOs |
+| Payments | Razorpay Java SDK 1.4.4 |
+| Frontend | Vanilla HTML / CSS / JavaScript (no framework, no `package.json`) |
+| Build | Apache Maven |
 
----
+There is no Node toolchain. All frontend assets are static files under `src/main/resources/static/` and are served directly by Spring Boot.
 
-```
- ╔══════════════════════════════════════════════════════╗
- ║  ██████╗ ███████╗████████╗██████╗  ██████╗          ║
- ║  ██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗        ║
- ║  ██████╔╝█████╗     ██║   ██████╔╝██║   ██║        ║
- ║  ██╔══██╗██╔══╝     ██║   ██╔══██╗██║   ██║        ║
- ║  ██║  ██║███████╗   ██║   ██║  ██║╚██████╔╝        ║
- ║  ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝        ║
- ║                                                      ║
- ║  ███╗   ███╗ █████╗ ██████╗ ████████╗               ║
- ║  ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝               ║
- ║  ██╔████╔██║███████║██████╔╝   ██║                  ║
- ║  ██║╚██╔╝██║██╔══██║██╔══██╗   ██║                  ║
- ║  ██║ ╚═╝ ██║██║  ██║██║  ██║   ██║                  ║
- ║  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝                  ║
- ╚══════════════════════════════════════════════════════╝
-```
-
-*🎵 Insert your favorite 80s synth track here 🎵*
-
-</div>
-
----
-
-## 🌟 What is RetroMart?
-
-**RetroMart** is a full-stack retro-themed online marketplace where **buyers** and **sellers** come together to trade vintage treasures! 📼💾🎮 Browse a modern, Flipkart/Amazon-style storefront, search by keyword or category, place an order, and pay securely via **UPI**, **Cards**, or **Netbanking** through Razorpay.
-
-Built with **Spring Boot** + **MySQL** on the backend and a hand-rolled **vanilla HTML/CSS/JS** frontend (no framework, no `package.json`), all served from a single Spring Boot app on **port 8080**.
-
----
-
-## 🕹️ Features
-
-| Feature | Description |
-|---------|-------------|
-| 🏬 **Modern Storefront** | Homepage with hero, deals, and featured products + sticky header, category nav, and footer on every page |
-| 🔐 **Dual Auth System** | Email/password login + Google OAuth 2.0, backed by HTTP sessions |
-| 🛍️ **Buyer & Seller Roles** | Register as a buyer or seller with role-based access |
-| 📦 **Product Management** | Sellers can add, view, and delete their own products |
-| 🗂️ **Categories** | Browse by Electronics, Fashion, Home, Books, Sports |
-| 🔍 **Keyword Search** | Case-insensitive search across all listings |
-| 🖼️ **Image Uploads** | Upload product images (JPEG/PNG/WEBP/AVIF/HEIC, up to 10MB) |
-| 💳 **UPI / Card / Netbanking** | Razorpay checkout with dedicated UPI, Card, and All-methods flows |
-| 🧾 **Receipts** | Downloadable order receipt after successful payment |
-| 📡 **Order Tracking** | 5-step tracker: Ordered → Confirmed → Packed → Shipped → Delivered |
-| 👤 **Profile Page** | Personal details, editable info, order history, and seller's products |
-| 📊 **Admin Dashboard** | View all users, products, and orders at a glance |
-
----
-
-## 🛠️ Tech Stack
-
-<div align="center">
+## Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│           🏗️ ARCHITECTURE                   │
-├─────────────────────────────────────────────┤
-│                                             │
-│   ┌───────────┐    ┌──────────────┐        │
-│   │  Frontend  │◄──►│   REST API   │        │
-│   │  (HTML/JS) │    │ (Spring MVC) │        │
-│   └───────────┘    └──────┬───────┘        │
-│                           │                 │
-│                    ┌──────▼───────┐         │
-│                    │   DAO Layer  │         │
-│                    │  (JDBC/SQL)  │         │
-│                    └──────┬───────┘         │
-│                           │                 │
-│                    ┌──────▼───────┐         │
-│                    │    MySQL     │         │
-│                    │   Database   │         │
-│                    └─────────────┘         │
-│                                             │
-└─────────────────────────────────────────────┘
+Browser (static HTML/CSS/JS)
+        |  fetch() calls
+        v
+Spring MVC REST controllers  (/api/**)
+        |
+        v
+DAO layer (plain JDBC)
+        |
+        v
+MySQL (retrodb)
 ```
 
-</div>
+Uploaded product images are written to a local `uploads/` directory and served from the `/uploads/**` URL path via a custom resource handler.
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| ☕ **Backend** | Spring Boot | 3.4.x |
-| 🗄️ **Database** | MySQL (raw JDBC DAOs) | 8.0+ |
-| 🔐 **Auth** | Spring Security + OAuth 2.0 | Latest |
-| 💳 **Payments** | Razorpay Java SDK | 1.4.4 |
-| 🎨 **Frontend** | Vanilla HTML/CSS/JS (shared `main.css` + `common.js`) | - |
-| 🏗️ **Build** | Apache Maven | 3.8+ |
-| ☁️ **Runtime** | Java | 17 |
+## Features
 
----
+- Storefront homepage with hero, deals, and featured products; shared header, category navigation, and footer across every page.
+- Buyer and seller roles with email/password login and optional Google OAuth 2.0.
+- Product management: sellers can add and delete their own products; everyone can browse.
+- Browse by category (Electronics, Fashion, Home, Books, Sports) and case-insensitive keyword search.
+- Image uploads accepting JPEG, PNG, GIF, WEBP, AVIF, and HEIC, up to 10 MB per file.
+- Razorpay checkout with dedicated flows for UPI, cards, and netbanking/wallets.
+- Downloadable receipt after successful payment.
+- Five-step order tracker: Ordered, Confirmed, Packed, Shipped, Delivered.
+- Profile page with personal details, order history, and a seller's product listings.
+- Admin dashboard listing users, products, and orders.
 
-## 🚀 Getting Started
+## Prerequisites
 
-### Prerequisites
+- Java 17 or newer
+- Maven 3.8 or newer
+- MySQL 8.0 or newer
+- A Razorpay account (test mode) if you want live payment flows
 
-```
-✅ Java 17 (or higher)
-✅ Maven 3.8+
-✅ MySQL 8.0+
-✅ Git
-```
+## Local Setup
 
-### 🗃️ Database Setup
+### 1. Create the database
+
+The JDBC credentials are hardcoded in `src/main/java/com/thinking/machines/retro/utility/RetroConnection.java` as user `retrouser` / password `retrouser` against database `retrodb`. Either match those values or update that file.
 
 ```sql
--- Create the database
 CREATE DATABASE retrodb;
 
--- Create the user (credentials match utility/RetroConnection.java)
 CREATE USER 'retrouser'@'localhost' IDENTIFIED BY 'retrouser';
 GRANT ALL PRIVILEGES ON retrodb.* TO 'retrouser'@'localhost';
 FLUSH PRIVILEGES;
 
 USE retrodb;
 
--- 👤 Users
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -140,7 +78,6 @@ CREATE TABLE users (
     user_type ENUM('buyer', 'seller') NOT NULL
 );
 
--- 📦 Products (note the category column)
 CREATE TABLE products (
     product_id INT AUTO_INCREMENT PRIMARY KEY,
     seller_id INT NOT NULL,
@@ -151,7 +88,6 @@ CREATE TABLE products (
     FOREIGN KEY (seller_id) REFERENCES users(user_id)
 );
 
--- 🖼️ Product images
 CREATE TABLE product_images (
     image_id INT AUTO_INCREMENT PRIMARY KEY,
     product_id INT NOT NULL,
@@ -159,7 +95,6 @@ CREATE TABLE product_images (
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 );
 
--- 🛒 Orders (payment + delivery + Razorpay fields)
 CREATE TABLE orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     buyer_id INT NOT NULL,
@@ -176,12 +111,16 @@ CREATE TABLE orders (
 );
 ```
 
-### ⚙️ Configure Payments & OAuth
+### 2. Configure application properties
 
-Edit `src/main/resources/application.properties` and add your own keys:
+Edit `src/main/resources/application.properties`. The relevant keys are:
 
 ```properties
-# Razorpay — get test keys from https://dashboard.razorpay.com/
+# File upload limits
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=60MB
+
+# Razorpay
 razorpay.demo-mode=false
 razorpay.key.id=YOUR_RAZORPAY_KEY_ID
 razorpay.key.secret=YOUR_RAZORPAY_KEY_SECRET
@@ -191,173 +130,232 @@ spring.security.oauth2.client.registration.google.client-id=YOUR_CLIENT_ID
 spring.security.oauth2.client.registration.google.client-secret=YOUR_CLIENT_SECRET
 ```
 
-> ⚠️ **Security note:** Do not commit real secrets to a public repo. Set `razorpay.demo-mode=true` to test the checkout flow without real keys. To enable UPI, make sure UPI is enabled on your Razorpay dashboard.
+Do not commit real secrets. See the Security Notes section for how to externalize them.
 
-### 🏃‍♂️ Run Locally
+### 3. Build and run
 
 ```bash
-# 1. Clone this radical repo
 git clone https://github.com/manishrathore77/retromart.git
 cd retromart
 
-# 2. Build the project
 mvn clean install
-
-# 3. Run the application (serves both the API and the frontend)
 mvn spring-boot:run
-
-# 4. Open your browser and VIBE
-# 🌐 http://localhost:8080/
 ```
 
-The app serves the static frontend and REST API together on **port 8080**. The homepage is `index.html`; uploaded images are served from the `./uploads/` directory.
+The application starts on http://localhost:8080/. The homepage is `index.html`.
 
-### 🔑 Test Accounts
+### Test accounts
 
 | Role | Email | Password |
 |------|-------|----------|
-| 🛒 Buyer | `buyer@retro.com` | `buyer123` |
-| 🏪 Seller | `seller@retro.com` | `seller123` |
+| Buyer | buyer@retro.com | buyer123 |
+| Seller | seller@retro.com | seller123 |
 
-**Razorpay test card:** `4111 1111 1111 1111` · **Test UPI ID:** `success@razorpay`
+These exist only if you seed them; register new accounts at `/register.html` otherwise.
 
----
+## Testing Razorpay Locally
 
-## 📁 Project Structure
+Payments are handled by Razorpay Checkout on the frontend and by `RazorpayOrderController` on the backend. There are two ways to exercise the payment flow locally.
+
+### Option A: Demo mode (no Razorpay account needed)
+
+Set the following in `application.properties`:
+
+```properties
+razorpay.demo-mode=true
+```
+
+In demo mode the backend skips Razorpay entirely and returns a fake order id. The payment page shows a confirmation dialog instead of the Razorpay widget and then marks the order as paid. This is useful for testing the end-to-end order/receipt flow without any keys.
+
+### Option B: Real Razorpay test mode
+
+1. Create a free account at https://dashboard.razorpay.com/ and switch the dashboard to Test Mode.
+2. Go to Settings, then API Keys, and generate a test key pair. Test keys are prefixed with `rzp_test_`.
+3. Put them in `application.properties` and disable demo mode:
+
+   ```properties
+   razorpay.demo-mode=false
+   razorpay.key.id=rzp_test_xxxxxxxxxxxx
+   razorpay.key.secret=xxxxxxxxxxxxxxxxxxxxxxxx
+   ```
+
+4. To use the UPI option, enable UPI under Settings, then Payment Methods in the Razorpay dashboard. Card and netbanking are enabled by default in test mode.
+5. Restart the app after changing keys, since they are read at startup.
+
+Test credentials accepted by Razorpay test mode:
+
+- Card: `4111 1111 1111 1111`, any future expiry, any CVV, any name. Use OTP `1234` if prompted.
+- UPI success: `success@razorpay`
+- UPI failure: `failure@razorpay`
+
+How the flow works in code:
+
+1. `payment.html` posts the amount to `POST /api/payment/razorpay-order`.
+2. `RazorpayOrderController` creates a Razorpay order and returns the order id plus the public key.
+3. The frontend opens Razorpay Checkout, restricting the visible methods based on the chosen button (UPI only, card only, or all methods) using Razorpay display blocks.
+4. On success the handler calls `PUT /api/orders/{id}/confirm` with the transaction id, payment status, and payment mode.
+5. The order is marked paid, the payment mode is stored, delivery status moves to processing, and the buyer is redirected to the receipt page.
+
+## Project Structure
 
 ```
 retromart/
-├── 📄 pom.xml                          # Maven config + dependencies
-├── 📄 README.md                        # You are here! 📍
-│
-├── 📂 src/main/
-│   ├── 📂 java/com/thinking/machines/retro/
-│   │   ├── 📄 RetroApplication.java            # 🚀 Main entry point
-│   │   ├── 📂 config/
-│   │   │   ├── 📄 SecurityConfig.java          # 🔐 Spring Security + permitted static assets
-│   │   │   └── 📄 WebConfig.java               # 🌐 Static resource / upload handler
-│   │   ├── 📂 controller/
-│   │   │   ├── 📄 UserController.java           # 👤 Auth, session, restore-session
-│   │   │   ├── 📄 ProductController.java        # 📦 Product CRUD + search + category
-│   │   │   ├── 📄 OrderController.java          # 🛒 Orders, payment confirm, tracking
-│   │   │   ├── 📄 ImageUploadController.java    # 🖼️ Image uploads (incl. AVIF/HEIC)
-│   │   │   ├── 📄 ProductImageController.java   # 📸 Image CRUD
-│   │   │   ├── 📄 RazorpayOrderController.java  # 💳 Razorpay order creation
-│   │   │   └── 📄 DashboardController.java      # 📊 Admin dashboard data
-│   │   ├── 📂 dao/
-│   │   │   ├── 📄 UserDAO.java                  # 👤 User queries
-│   │   │   ├── 📄 ProductDAO.java               # 📦 Product + search + category queries
-│   │   │   ├── 📄 OrderDAO.java                 # 🛒 Order + payment_mode queries
-│   │   │   └── 📄 ProductImageDAO.java          # 🖼️ Image queries
-│   │   ├── 📂 modal/
-│   │   │   ├── 📄 User.java
-│   │   │   ├── 📄 Product.java                  # includes category
-│   │   │   ├── 📄 Order.java                    # includes paymentMode
-│   │   │   └── 📄 ProductImage.java
-│   │   └── 📂 utility/
-│   │       └── 📄 RetroConnection.java          # 🗄️ JDBC connection factory
-│   └── 📂 resources/
-│       ├── 📄 application.properties            # ⚙️ Razorpay, OAuth, upload limits
-│       └── 📂 static/
-│           ├── 📄 index.html                    # 🏬 Homepage / storefront
-│           ├── 📄 login.html                    # 🔑 Login
-│           ├── 📄 register.html                 # 📝 Registration
-│           ├── 📄 product-list.html             # 🛍️ Product grid + search/category
-│           ├── 📄 product-details.html          # 🔍 Product view + Buy Now
-│           ├── 📄 add-product.html              # ➕ Add product (seller)
-│           ├── 📄 place-order.html              # 🛒 Order form
-│           ├── 📄 payment.html                  # 💳 UPI / Card / Netbanking checkout
-│           ├── 📄 receipt.html                  # 🧾 Downloadable receipt
-│           ├── 📄 my-orders.html                # 📋 Order history + tracker
-│           ├── 📄 profile.html                  # 👤 Profile, orders, seller products
-│           ├── 📄 admin-dashboard.html          # 📊 Admin panel
-│           ├── 📂 css/  └── main.css            # 🎨 Shared design system
-│           └── 📂 js/   └── common.js           # 🧩 Header/footer/search/tracker/auth
-│
-└── 📂 uploads/                          # 🖼️ Uploaded product images (served at /uploads/**)
+  pom.xml                         Maven config and dependencies
+  README.md
+  uploads/                        Uploaded product images (served at /uploads/**)
+  src/main/
+    java/com/thinking/machines/retro/
+      RetroApplication.java       Spring Boot entry point
+      config/
+        SecurityConfig.java       Spring Security + permitted static paths + OAuth
+        WebConfig.java            Static resource handler for /uploads/**
+      controller/
+        UserController.java       Auth, session, restore-session, user CRUD
+        ProductController.java    Product CRUD, search, category filter
+        OrderController.java      Orders, payment confirm, status updates
+        ImageUploadController.java Image upload and validation
+        ProductImageController.java Product image CRUD
+        RazorpayOrderController.java Razorpay order creation
+        DashboardController.java  Admin dashboard data
+      dao/                        Plain JDBC data access objects
+        UserDAO.java
+        ProductDAO.java
+        OrderDAO.java
+        ProductImageDAO.java
+      modal/                      Domain models (User, Product, Order, ProductImage)
+      utility/
+        RetroConnection.java      JDBC connection factory
+    resources/
+      application.properties      Razorpay, OAuth, upload limits
+      static/
+        index.html                Storefront homepage
+        login.html, register.html
+        product-list.html         Grid with search and category filter
+        product-details.html      Product view and Buy Now
+        add-product.html          Seller add-product form
+        place-order.html          Order form
+        payment.html              UPI / card / netbanking checkout
+        receipt.html              Downloadable receipt
+        my-orders.html            Order history with tracker
+        profile.html              Profile, orders, seller products
+        admin-dashboard.html      Admin panel
+        css/main.css              Shared design system
+        js/common.js              Shared header/footer/search/tracker/auth helpers
 ```
 
----
+## API Reference
 
-## 🗺️ API Endpoints
+### Users
 
-### 👤 Users
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/users/register` | Register new user |
-| `POST` | `/api/users/login` | Login (stores user in session) |
-| `POST` | `/api/users/logout` | Logout (invalidate session) |
-| `GET` | `/api/users/session` | Get current session user |
-| `POST` | `/api/users/restore-session` | Re-hydrate server session from localStorage |
-| `GET` | `/api/users` | Get all users |
-| `GET` | `/api/users/{id}` | Get user by ID |
-| `PUT` | `/api/users/{id}` | Update user |
-| `DELETE` | `/api/users/{id}` | Delete user |
+| POST | `/api/users/register` | Register a new user |
+| POST | `/api/users/login` | Log in and create a session |
+| POST | `/api/users/logout` | Invalidate the session |
+| GET | `/api/users/session` | Get the current session user |
+| POST | `/api/users/restore-session` | Re-create a server session from client state |
+| GET | `/api/users` | List all users |
+| GET | `/api/users/{id}` | Get a user by id |
+| PUT | `/api/users/{id}` | Update a user |
+| DELETE | `/api/users/{id}` | Delete a user |
 
-### 📦 Products
+### Products
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/products` | Add product (seller only) |
-| `GET` | `/api/products` | Get all products (or `?category=` to filter) |
-| `GET` | `/api/products/search?keyword=` | Keyword search |
-| `GET` | `/api/products/seller/{sellerId}` | Get products by seller |
-| `GET` | `/api/products/{id}` | Get product by ID |
-| `DELETE` | `/api/products/{id}` | Delete own product (seller only) |
+| POST | `/api/products` | Add a product (seller only) |
+| GET | `/api/products` | List products, optionally `?category=` |
+| GET | `/api/products/search?keyword=` | Keyword search |
+| GET | `/api/products/seller/{sellerId}` | List a seller's products |
+| GET | `/api/products/{id}` | Get a product by id |
+| DELETE | `/api/products/{id}` | Delete own product (seller only) |
 
-### 🖼️ Images
+### Images
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/upload/{productId}` | Upload image for product |
-| `GET` | `/api/images/product/{productId}` | Get images by product |
-| `DELETE` | `/api/images/{id}` | Delete specific image |
-| `DELETE` | `/api/images/product/{productId}` | Delete all product images |
+| POST | `/api/upload/{productId}` | Upload an image for a product |
+| GET | `/api/images/product/{productId}` | List images for a product |
+| DELETE | `/api/images/{id}` | Delete one image |
+| DELETE | `/api/images/product/{productId}` | Delete all images for a product |
 
-### 🛒 Orders
+### Orders
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/orders` | Place new order |
-| `GET` | `/api/orders` | Get all orders |
-| `GET` | `/api/orders/{id}` | Get order by ID |
-| `GET` | `/api/orders/buyer/{buyerId}` | Get orders by buyer |
-| `PUT` | `/api/orders/{id}/confirm` | Confirm payment (txn id, status, payment mode) |
-| `PUT` | `/api/orders/payment/{id}` | Update payment status |
-| `PUT` | `/api/orders/delivery/{id}` | Update delivery status |
+| POST | `/api/orders` | Place a new order |
+| GET | `/api/orders` | List all orders |
+| GET | `/api/orders/{id}` | Get an order by id |
+| GET | `/api/orders/buyer/{buyerId}` | List a buyer's orders |
+| PUT | `/api/orders/{id}/confirm` | Confirm payment (txn id, status, payment mode) |
+| PUT | `/api/orders/payment/{id}` | Update payment status |
+| PUT | `/api/orders/delivery/{id}` | Update delivery status |
 
-### 💳 Payment
+### Payment
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/payment/razorpay-order` | Create a Razorpay order (returns order id + key) |
+| POST | `/api/payment/razorpay-order` | Create a Razorpay order and return id + public key |
 
----
+## Deployment
 
-## 💳 Payment Flow
+The build produces a self-contained executable JAR. A typical production rollout looks like this.
 
-1. Buyer clicks **Buy Now** → **Place Order** → redirected to **Payment**.
-2. Buyer picks a method: **Pay with UPI**, **Credit/Debit Card**, or **Netbanking/Wallets**.
-3. Frontend calls `/api/payment/razorpay-order`, then opens Razorpay Checkout with the matching method block.
-4. On success, `/api/orders/{id}/confirm` saves the transaction id, sets payment status to **paid**, records the **payment mode**, and moves delivery status to **processing**.
-5. Buyer lands on the **receipt** page and can download it.
+### 1. Build the JAR
 
----
+```bash
+mvn clean package
+```
 
-## 🤝 Contributing
+The artifact is written to `target/retro-0.0.1-SNAPSHOT.jar`.
 
-Contributions from fellow retro enthusiasts are welcome! Fork the repo, create a feature branch, and open a pull request.
+### 2. Externalize configuration
 
----
+Avoid baking secrets and database credentials into the image. Spring Boot lets you override any property with an environment variable or a `--` argument. The database credentials currently live in `RetroConnection.java`; for production, refactor them to read from properties or environment variables and then supply them externally.
 
-## 📜 License
+Example using environment-driven properties:
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+```bash
+java -jar target/retro-0.0.1-SNAPSHOT.jar \
+  --razorpay.key.id="$RAZORPAY_KEY_ID" \
+  --razorpay.key.secret="$RAZORPAY_KEY_SECRET" \
+  --razorpay.demo-mode=false \
+  --server.port=8080
+```
 
----
+### 3. Run as a service
 
-<div align="center">
+Run the JAR behind a process manager (systemd, Docker, or a platform such as Render, Railway, or a cloud VM). Ensure the working directory is writable so the `uploads/` folder can be created, or mount a persistent volume for it, since uploaded images are stored on disk rather than in the database.
 
-### 🕹️ Built with ❤️ and excessive nostalgia by
+A minimal Dockerfile:
 
-**[Manish Rathore](https://github.com/manishrathore77)** 🚀
+```dockerfile
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY target/retro-0.0.1-SNAPSHOT.jar app.jar
+VOLUME ["/app/uploads"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
 
-*Made with mass nostalgia overload in 2026* 💾✨
+### 4. Production checklist
 
-</div>
+- Point the application at a managed MySQL instance and create the schema shown above.
+- Set strong, unique Razorpay live keys via environment variables, not in source control.
+- Put the app behind HTTPS (a reverse proxy such as Nginx, or the platform's TLS termination). Razorpay live mode and OAuth redirect URIs require HTTPS.
+- Update the Google OAuth redirect URI to your production domain.
+- Mount or back up the `uploads/` directory.
+- Replace plaintext password storage with hashing (for example BCrypt) before handling real users.
+
+## Security Notes
+
+- Passwords are currently stored and compared in plaintext. This is acceptable for a learning project but must be replaced with a password hashing scheme before any real deployment.
+- CSRF protection is disabled in `SecurityConfig` to simplify the API. Re-enable and configure it if you expose this beyond a trusted environment.
+- Do not commit Razorpay or Google OAuth secrets. Move them to environment variables or an untracked properties file, and rotate any key that has been committed.
+- The JDBC credentials are hardcoded in `RetroConnection.java`; externalize them for any shared or production environment.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+Built by [Manish Rathore](https://github.com/manishrathore77).
