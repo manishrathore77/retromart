@@ -20,13 +20,17 @@ public class ImageUploadController {
     private static final Path DIR = Paths.get("uploads");
     private final ProductImageDAO dao = new ProductImageDAO();
     
-    // Allowed image types
+    // Allowed MIME types and extensions
     private static final List<String> ALLOWED_TYPES = Arrays.asList(
-        "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
+        "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/avif", "image/heic", "image/heif"
     );
-    
-    // Maximum file size (5MB)
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+    private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
+        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic", ".heif"
+    );
+
+    // Maximum file size (10MB)
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     // Ensure uploads directory exists
     static {
@@ -49,11 +53,13 @@ public class ImageUploadController {
             }
             
             if (file.getSize() > MAX_FILE_SIZE) {
-                return ResponseEntity.badRequest().body("File size exceeds 5MB limit");
+                return ResponseEntity.badRequest().body("File size exceeds 10MB limit");
             }
-            
-            if (!ALLOWED_TYPES.contains(file.getContentType())) {
-                return ResponseEntity.badRequest().body("Invalid file type. Only images allowed.");
+
+            if (!isAllowedImage(file)) {
+                String name = file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown";
+                return ResponseEntity.badRequest().body(
+                    "Invalid file type for '" + name + "'. Use JPG, PNG, WEBP, GIF, or AVIF.");
             }
 
             // Create directory if it doesn't exist
@@ -93,6 +99,19 @@ public class ImageUploadController {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Upload error: " + e.getMessage());
         }
+    }
+
+    private boolean isAllowedImage(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType != null && ALLOWED_TYPES.contains(contentType.toLowerCase())) {
+            return true;
+        }
+        String filename = file.getOriginalFilename();
+        if (filename != null) {
+            String lower = filename.toLowerCase();
+            return ALLOWED_EXTENSIONS.stream().anyMatch(lower::endsWith);
+        }
+        return false;
     }
     
     // Response class for consistent JSON structure

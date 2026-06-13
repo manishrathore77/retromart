@@ -11,7 +11,7 @@ public class ProductDAO {
 
     // Insert a new product and return the auto‑generated product_id
     public int addProduct(Product product) throws SQLException {
-        String sql = "INSERT INTO products (seller_id, title, description, price) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO products (seller_id, title, description, price, category) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = RetroConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -20,6 +20,7 @@ public class ProductDAO {
             ps.setString(2, product.getTitle());
             ps.setString(3, product.getDescription());
             ps.setDouble(4, product.getPrice());
+            ps.setString(5, product.getCategory() != null ? product.getCategory() : "electronics");
 
             ps.executeUpdate();
 
@@ -77,15 +78,33 @@ public class ProductDAO {
         return list;
     }
 
-    // Case‑insensitive keyword search on title
-    public List<Product> searchProducts(String keyword) throws SQLException {
+    public List<Product> getProductsByCategory(String category) throws SQLException {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM products WHERE LOWER(title) LIKE LOWER(?)";
+        String sql = "SELECT * FROM products WHERE LOWER(category) = LOWER(?) ORDER BY product_id DESC";
 
         try (Connection conn = RetroConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, "%" + keyword + "%");
+            ps.setString(1, category);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    // Case‑insensitive keyword search on title
+    public List<Product> searchProducts(String keyword) throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM products WHERE LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)";
+
+        try (Connection conn = RetroConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String pattern = "%" + keyword + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
@@ -130,6 +149,11 @@ public class ProductDAO {
         product.setTitle(rs.getString("title"));
         product.setDescription(rs.getString("description"));
         product.setPrice(rs.getDouble("price"));
+        try {
+            product.setCategory(rs.getString("category"));
+        } catch (SQLException ignored) {
+            product.setCategory("electronics");
+        }
         return product;
     }
 }

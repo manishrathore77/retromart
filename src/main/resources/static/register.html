@@ -2,61 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>User Register</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 50px;
-      background-color: #f2f2f2;
-    }
-    h2 {
-      text-align: center;
-    }
-    form {
-      width: 300px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: teal;
-      color: white;
-      border: none;
-    }
-    .message {
-      text-align: center;
-      margin-top: 20px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register – RetroMart</title>
+  <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-  <h2>User Registration</h2>
-  <form id="registerForm">
-    <input type="text" name="name" placeholder="Full Name" required />
-    <input type="email" name="email" placeholder="Email" required />
-    <input type="text" name="phone" placeholder="Phone" />
-    <input type="password" name="password" placeholder="Password" required />
-    <select name="userType" required>
-      <option value="">Select Role</option>
-      <option value="buyer">Buyer</option>
-      <option value="seller">Seller</option>
-    </select>
-    <button type="submit">Register</button>
-    <div class="message" id="message"></div>
-  </form>
+  <div id="app-header"></div>
 
+  <div class="auth-page">
+    <div class="auth-layout">
+      <div class="auth-brand">
+        <h1>Join RetroMart</h1>
+        <p>Create your account and start shopping or selling today.</p>
+        <ul>
+          <li>Register as a Buyer to shop</li>
+          <li>Register as a Seller to list products</li>
+          <li>One account, endless possibilities</li>
+        </ul>
+      </div>
+      <div class="auth-form-side">
+        <h2 style="font-size:22px;margin:0 0 4px;">Create Account</h2>
+        <p class="subtitle" style="margin-bottom:24px;">Fill in your details below</p>
+
+        <form id="registerForm">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" placeholder="Your full name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="text" id="phone" name="phone" placeholder="10-digit mobile number" />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Create a password" required />
+          </div>
+          <div class="form-group">
+            <label for="userType">I want to</label>
+            <select id="userType" name="userType" required>
+              <option value="">Select role</option>
+              <option value="buyer">Shop as Buyer</option>
+              <option value="seller">Sell as Seller</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
+          <div class="message" id="message"></div>
+        </form>
+
+        <p class="text-center mt-2 text-muted" style="font-size:14px;">
+          Already have an account? <a href="login.html">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+  <script src="/js/common.js"></script>
   <script>
-    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-
       const form = e.target;
       const user = {
         name: form.name.value,
@@ -66,24 +74,21 @@
         userType: form.userType.value
       };
 
-      const res = await fetch("/api/users/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+      const res = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
       });
 
-      const message = document.getElementById("message");
+      const message = document.getElementById('message');
       if (res.ok) {
         const text = await res.text();
         message.textContent = text;
-        message.style.color = "green";
+        message.className = 'message success';
         form.reset();
       } else {
-        const error = await res.text();
-        message.textContent = error;
-        message.style.color = "red";
+        message.textContent = await res.text();
+        message.className = 'message error';
       }
     });
   </script>

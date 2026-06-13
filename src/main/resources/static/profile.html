@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile – RetroMart</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="page-content">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <span>›</span>
+      <span>Your Profile</span>
+    </div>
+
+    <div class="profile-layout">
+      <aside class="profile-sidebar">
+        <div class="profile-sidebar-header">Your Account</div>
+        <nav class="profile-nav">
+          <a href="#personal" class="active">Personal Details</a>
+          <a href="#orders" id="ordersNavLink">My Orders</a>
+          <a href="#products" id="productsNavLink" class="hidden">My Products</a>
+          <a href="add-product.html" id="addProductNavLink" class="hidden">Add Product</a>
+          <a href="#" id="sidebarLogout">Logout</a>
+        </nav>
+      </aside>
+
+      <div class="profile-main">
+        <div class="profile-hero" id="profileHero">
+          <div class="profile-avatar" id="avatarInitial">?</div>
+          <div class="profile-hero-info">
+            <h1 id="heroName">Loading...</h1>
+            <p id="heroEmail"></p>
+            <span class="profile-badge" id="heroType"></span>
+          </div>
+        </div>
+
+        <section class="profile-card" id="personal">
+          <div class="profile-card-header">
+            <h2>Personal Details</h2>
+            <button class="btn btn-outline" id="editToggleBtn">Edit</button>
+          </div>
+
+          <div id="detailsView">
+            <div class="profile-details-grid">
+              <div class="profile-detail-item">
+                <label>Full Name</label>
+                <span id="viewName">—</span>
+              </div>
+              <div class="profile-detail-item">
+                <label>Email</label>
+                <span id="viewEmail">—</span>
+              </div>
+              <div class="profile-detail-item">
+                <label>Phone</label>
+                <span id="viewPhone">—</span>
+              </div>
+              <div class="profile-detail-item">
+                <label>Account Type</label>
+                <span id="viewType">—</span>
+              </div>
+              <div class="profile-detail-item">
+                <label>User ID</label>
+                <span id="viewUserId">—</span>
+              </div>
+            </div>
+          </div>
+
+          <form id="editForm" class="hidden">
+            <div class="form-group">
+              <label for="editName">Full Name</label>
+              <input type="text" id="editName" required />
+            </div>
+            <div class="form-group">
+              <label for="editEmail">Email</label>
+              <input type="email" id="editEmail" required />
+            </div>
+            <div class="form-group">
+              <label for="editPhone">Phone</label>
+              <input type="text" id="editPhone" />
+            </div>
+            <div style="display:flex;gap:12px;">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="button" class="btn btn-outline" id="cancelEditBtn">Cancel</button>
+            </div>
+            <div class="message" id="editMsg"></div>
+          </form>
+        </section>
+
+        <section class="profile-card" id="orders">
+          <div class="profile-card-header">
+            <h2>My Orders</h2>
+            <span class="text-muted" id="orderCount"></span>
+          </div>
+          <div id="ordersList"></div>
+          <div class="empty-state hidden" id="emptyOrders">
+            <div class="empty-icon">📦</div>
+            <h3>No orders yet</h3>
+            <p>Your order history will appear here.</p>
+            <a href="product-list.html" class="btn btn-primary mt-2">Start Shopping</a>
+          </div>
+        </section>
+
+        <section class="profile-card hidden" id="products">
+          <div class="profile-card-header">
+            <h2>My Listed Products</h2>
+            <a href="add-product.html" class="btn btn-blue">+ Add Product</a>
+          </div>
+          <div id="sellerProductsList"></div>
+          <div class="empty-state hidden" id="emptyProducts">
+            <div class="empty-icon">🏪</div>
+            <h3>No products listed</h3>
+            <p>Start selling by adding your first product.</p>
+            <a href="add-product.html" class="btn btn-primary mt-2">Add Product</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+  <script src="/js/common.js"></script>
+  <script>
+    let currentUser = RetroMart.getUser();
+
+    if (!currentUser) {
+      window.location.href = 'login.html';
+    }
+
+    function getInitial(name) {
+      return (name || '?').charAt(0).toUpperCase();
+    }
+
+    function renderUserDetails(user) {
+      currentUser = user;
+      document.getElementById('avatarInitial').textContent = getInitial(user.name);
+      document.getElementById('heroName').textContent = user.name;
+      document.getElementById('heroEmail').textContent = user.email;
+      document.getElementById('heroType').textContent = user.userType + ' Account';
+
+      document.getElementById('viewName').textContent = user.name;
+      document.getElementById('viewEmail').textContent = user.email;
+      document.getElementById('viewPhone').textContent = user.phone || 'Not provided';
+      document.getElementById('viewType').textContent = user.userType;
+      document.getElementById('viewUserId').textContent = '#' + user.userId;
+
+      document.getElementById('editName').value = user.name;
+      document.getElementById('editEmail').value = user.email;
+      document.getElementById('editPhone').value = user.phone || '';
+
+      if (user.userType === 'seller') {
+        document.getElementById('productsNavLink').classList.remove('hidden');
+        document.getElementById('addProductNavLink').classList.remove('hidden');
+        document.getElementById('products').classList.remove('hidden');
+        loadSellerProducts(user.userId);
+      }
+    }
+
+    async function loadProfile() {
+      const res = await fetch(`/api/users/${currentUser.userId}`);
+      if (res.ok) {
+        const user = await res.json();
+        localStorage.setItem('user', JSON.stringify(user));
+        renderUserDetails(user);
+      } else {
+        renderUserDetails(currentUser);
+      }
+    }
+
+    async function loadOrders() {
+      const res = await fetch(`/api/orders/buyer/${currentUser.userId}`);
+      if (!res.ok) return;
+
+      const orders = await res.json();
+      const container = document.getElementById('ordersList');
+      document.getElementById('orderCount').textContent = orders.length + ' order' + (orders.length !== 1 ? 's' : '');
+
+      if (!orders.length) {
+        document.getElementById('emptyOrders').classList.remove('hidden');
+        return;
+      }
+
+      container.innerHTML = '';
+      document.getElementById('emptyOrders').classList.add('hidden');
+      for (const order of orders) {
+        const pRes = await fetch(`/api/products/${order.productId}`);
+        const product = pRes.ok ? await pRes.json() : { title: 'Unknown Product', price: 0 };
+        const imgUrl = await RetroMart.fetchProductImage(order.productId);
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = RetroMart.buildOrderCardHtml(order, product, imgUrl);
+        container.appendChild(wrapper.firstElementChild);
+      }
+    }
+
+    async function loadSellerProducts(sellerId) {
+      const res = await fetch(`/api/products/seller/${sellerId}`);
+      if (!res.ok) return;
+
+      const products = await res.json();
+      const container = document.getElementById('sellerProductsList');
+
+      if (!products.length) {
+        document.getElementById('emptyProducts').classList.remove('hidden');
+        return;
+      }
+
+      container.innerHTML = '';
+      document.getElementById('emptyProducts').classList.add('hidden');
+      for (const p of products) {
+        const imgUrl = await RetroMart.fetchProductImage(p.productId);
+        const row = document.createElement('div');
+        row.className = 'seller-product-row';
+        row.dataset.productId = p.productId;
+        row.innerHTML = `
+          <img src="${imgUrl || 'https://via.placeholder.com/56?text=No+Image'}" alt="${p.title}" />
+          <div style="flex:1;">
+            <strong>${p.title}</strong>
+            <div class="order-card-meta">${p.description || ''}</div>
+          </div>
+          <div class="seller-product-actions">
+            <strong>₹${Number(p.price).toLocaleString('en-IN')}</strong>
+            <div style="display:flex;gap:12px;">
+              <a href="product-details.html?pid=${p.productId}">View</a>
+              <button class="btn btn-danger delete-product-btn" data-id="${p.productId}" data-title="${p.title.replace(/"/g, '&quot;')}">Delete</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(row);
+      }
+
+      container.querySelectorAll('.delete-product-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteProduct(btn.dataset.id, btn.dataset.title, sellerId));
+      });
+    }
+
+    async function deleteProduct(productId, title, sellerId) {
+      if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+
+      const seller = await RetroMart.restoreSession();
+      if (!seller || seller.userType !== 'seller') {
+        alert('Please sign in as a seller to delete products.');
+        window.location.href = 'login.html?redirect=profile.html';
+        return;
+      }
+
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (res.ok) {
+        document.querySelector(`.seller-product-row[data-product-id="${productId}"]`)?.remove();
+        const remaining = document.querySelectorAll('.seller-product-row').length;
+        if (remaining === 0) {
+          document.getElementById('emptyProducts').classList.remove('hidden');
+        }
+      } else {
+        alert(await res.text() || 'Failed to delete product.');
+      }
+    }
+
+    document.getElementById('editToggleBtn').addEventListener('click', () => {
+      document.getElementById('detailsView').classList.add('hidden');
+      document.getElementById('editForm').classList.remove('hidden');
+      document.getElementById('editToggleBtn').classList.add('hidden');
+    });
+
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+      document.getElementById('detailsView').classList.remove('hidden');
+      document.getElementById('editForm').classList.add('hidden');
+      document.getElementById('editToggleBtn').classList.remove('hidden');
+      document.getElementById('editMsg').textContent = '';
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('editMsg');
+      const updated = {
+        userId: currentUser.userId,
+        name: document.getElementById('editName').value.trim(),
+        email: document.getElementById('editEmail').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        password: currentUser.password,
+        userType: currentUser.userType
+      };
+
+      const res = await fetch(`/api/users/${currentUser.userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+
+      if (res.ok) {
+        localStorage.setItem('user', JSON.stringify(updated));
+        renderUserDetails(updated);
+        document.getElementById('cancelEditBtn').click();
+        msg.className = 'message success';
+        msg.textContent = 'Profile updated successfully!';
+        setTimeout(() => { msg.textContent = ''; }, 3000);
+      } else {
+        msg.className = 'message error';
+        msg.textContent = 'Failed to update profile.';
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem('user');
+      fetch('/api/users/logout', { method: 'POST' }).finally(() => {
+        window.location.href = 'login.html';
+      });
+    }
+
+    document.getElementById('sidebarLogout').addEventListener('click', (e) => {
+      e.preventDefault();
+      logout();
+    });
+
+    document.querySelectorAll('.profile-nav a[href^="#"]').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelectorAll('.profile-nav a').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+
+    loadProfile();
+    loadOrders();
+  </script>
+</body>
+</html>

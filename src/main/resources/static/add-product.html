@@ -2,85 +2,145 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Product + 5 Images</title>
-  <style>
-    body{font-family:Arial;background:#f2f2f2;margin:40px}
-    form{width:380px;margin:auto;background:#fff;padding:25px;border-radius:10px;
-         box-shadow:0 2px 6px rgba(0,0,0,.1)}
-    input,textarea,button{width:100%;padding:12px;margin:10px 0;border:1px solid #ccc;border-radius:6px}
-    button{background:teal;color:#fff;border:none;cursor:pointer}
-    button:hover{background:#006d6d}
-    .msg{text-align:center;margin-top:15px;font-weight:bold}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product – RetroMart</title>
+  <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-<h2 style="text-align:center">Add Product (exactly 5 images)</h2>
+  <div id="app-header"></div>
 
-<form id="productForm" enctype="multipart/form-data">
-  <input type="text"     name="title"       placeholder="Product Title" required>
-  <textarea              name="description" placeholder="Description"></textarea>
-  <input type="number"   name="price"       placeholder="Price" required>
+  <main class="page-content">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <span>›</span>
+      <span>Seller Dashboard</span>
+      <span>›</span>
+      <span>Add Product</span>
+    </div>
 
-  <label><strong>Upload 5 product images</strong></label>
-  <input class="imageInp" type="file" accept="image/*" required>
-  <input class="imageInp" type="file" accept="image/*" required>
-  <input class="imageInp" type="file" accept="image/*" required>
-  <input class="imageInp" type="file" accept="image/*" required>
-  <input class="imageInp" type="file" accept="image/*" required>
+    <div class="checkout-card" style="max-width:520px;">
+      <h2>Add New Product</h2>
+      <p class="text-muted" style="margin:-12px 0 20px;font-size:14px;">Upload exactly 5 product images for best results.</p>
 
-  <button type="submit">Add Product</button>
-  <div class="msg" id="msg"></div>
-</form>
+      <form id="productForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="title">Product Title</label>
+          <input type="text" id="title" name="title" placeholder="Enter product name" required />
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" placeholder="Describe your product"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="price">Price (₹)</label>
+          <input type="number" id="price" name="price" placeholder="0.00" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="electronics">Electronics</option>
+            <option value="fashion">Fashion</option>
+            <option value="home">Home & Kitchen</option>
+            <option value="books">Books</option>
+            <option value="sports">Sports</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Product Images (5 required — JPG, PNG, WEBP, AVIF)</label>
+          <input class="imageInp" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.jpg,.jpeg,.png,.webp,.avif" required style="margin-bottom:8px;" />
+          <input class="imageInp" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.jpg,.jpeg,.png,.webp,.avif" required style="margin-bottom:8px;" />
+          <input class="imageInp" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.jpg,.jpeg,.png,.webp,.avif" required style="margin-bottom:8px;" />
+          <input class="imageInp" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.jpg,.jpeg,.png,.webp,.avif" required style="margin-bottom:8px;" />
+          <input class="imageInp" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.jpg,.jpeg,.png,.webp,.avif" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">List Product</button>
+        <div class="message" id="msg"></div>
+      </form>
+    </div>
+  </main>
 
-<script>
-async function ensureSession(){
-  const res = await fetch("/api/users/session");
-  if(res.ok) return;              // user is logged‑in seller
-  alert("Please login first");    // not logged‑in
-  window.location.href = "login.html";
-}
-ensureSession();                  // check immediately
-
-document.getElementById("productForm").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-
-  const files = [...document.querySelectorAll(".imageInp")].map(i=>i.files[0]).filter(Boolean);
-  if(files.length !== 5){ alert("Select exactly 5 images"); return; }
-
-  const pBody = {
-    title:       e.target.title.value,
-    description: e.target.description.value,
-    price:       parseFloat(e.target.price.value)
-  };
-
-  const msg = document.getElementById("msg");
-  msg.textContent = "Uploading…"; msg.style.color = "black";
-
-  try{
-    /* 1️⃣ create product (sellerId set in controller via session) */
-    const pRes = await fetch("/api/products",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(pBody)
-    });
-    if(!pRes.ok) throw new Error(await pRes.text());
-    const { productId } = await pRes.json();
-
-    /* 2️⃣ upload images */
-    for(const f of files){
-      const fd = new FormData(); fd.append("file",f);
-      const up = await fetch("/api/upload/"+productId,{method:"POST",body:fd});
-      if(!up.ok) throw new Error("image upload failed");
+  <div id="app-footer"></div>
+  <script src="/js/common.js"></script>
+  <script>
+    async function ensureSession() {
+      const user = await RetroMart.requireSeller();
+      if (!user) return;
+      document.getElementById('productForm').querySelector('button[type=submit]').disabled = false;
     }
 
-    msg.textContent = "✅ Product & images saved!";
-    msg.style.color = "green";
-    e.target.reset();
-  }catch(err){
-    msg.textContent = "❌ "+err.message;
-    msg.style.color = "red";
-  }
-});
-</script>
+    document.getElementById('productForm').querySelector('button[type=submit]').disabled = true;
+    ensureSession();
+
+    const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
+    const MAX_SIZE = 10 * 1024 * 1024;
+
+    function validateFile(file) {
+      const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+      if (!ALLOWED_EXT.includes(ext)) {
+        return `"${file.name}" is not supported. Use JPG, PNG, WEBP, or AVIF.`;
+      }
+      if (file.size > MAX_SIZE) {
+        return `"${file.name}" is too large (max 10MB).`;
+      }
+      return null;
+    }
+
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const files = [...document.querySelectorAll('.imageInp')].map(i => i.files[0]).filter(Boolean);
+      if (files.length !== 5) { alert('Please select exactly 5 images'); return; }
+
+      for (const f of files) {
+        const err = validateFile(f);
+        if (err) { alert(err); return; }
+      }
+
+      const pBody = {
+        title: e.target.title.value,
+        description: e.target.description.value,
+        price: parseFloat(e.target.price.value),
+        category: e.target.category.value
+      };
+
+      const msg = document.getElementById('msg');
+      msg.textContent = 'Uploading product...';
+      msg.className = 'message';
+
+      try {
+        const seller = await RetroMart.requireSeller();
+        if (!seller) return;
+
+        const pRes = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(pBody)
+        });
+        if (!pRes.ok) throw new Error(await pRes.text() || 'Failed to create product. Please sign in as a seller.');
+
+        const productData = await pRes.json();
+        const productId = productData.productId;
+        if (!productId) throw new Error('Product created but no ID returned.');
+
+        for (let i = 0; i < files.length; i++) {
+          const fd = new FormData();
+          fd.append('file', files[i]);
+          msg.textContent = `Uploading image ${i + 1} of 5...`;
+          const up = await fetch('/api/upload/' + productId, { method: 'POST', credentials: 'include', body: fd });
+          if (!up.ok) {
+            const errText = await up.text();
+            throw new Error(errText || `Failed to upload ${files[i].name}`);
+          }
+        }
+
+        msg.textContent = 'Product listed successfully!';
+        msg.className = 'message success';
+        e.target.reset();
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className = 'message error';
+      }
+    });
+  </script>
 </body>
 </html>

@@ -34,12 +34,13 @@ public class SecurityConfig {
         http
             .csrf().disable()
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login.html", "/register.html", "/api/**", "/uploads/**", "/static/**").permitAll()
+                .requestMatchers("/", "/index.html", "/*.html", "/css/**", "/js/**", "/assets/**",
+                    "/login.html", "/register.html", "/api/**", "/uploads/**", "/static/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login.html")
-                .defaultSuccessUrl("/product-list.html", true)
+                .defaultSuccessUrl("/index.html", true)
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/login.html")

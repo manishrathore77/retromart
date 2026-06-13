@@ -95,5 +95,22 @@ public ResponseEntity<?> getSessionUser(HttpSession session) {
     return ResponseEntity.status(401).body("No active session");
 }
 
+@PostMapping("/restore-session")
+public ResponseEntity<?> restoreSession(@RequestBody User partial, HttpSession session) {
+    try {
+        User user = null;
+        if (partial.getUserId() > 0) {
+            user = userDAO.getUserById(partial.getUserId());
+        } else if (partial.getEmail() != null && !partial.getEmail().isBlank()) {
+            user = userDAO.getUserByEmail(partial.getEmail());
+        }
+        if (user == null) return ResponseEntity.status(401).body("User not found");
+        session.setAttribute("currentUser", user);
+        return ResponseEntity.ok(user);
+    } catch (SQLException e) {
+        return ResponseEntity.status(500).body("Session restore failed");
+    }
+}
+
 
 }

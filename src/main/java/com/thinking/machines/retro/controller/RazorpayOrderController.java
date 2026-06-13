@@ -1,6 +1,7 @@
 package com.thinking.machines.retro.controller;
 
 import com.razorpay.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.json.JSONObject;
@@ -9,40 +10,65 @@ import org.json.JSONObject;
 @RequestMapping("/api/payment")
 public class RazorpayOrderController {
 
-    private static final String KEY_ID = "rzp_test_IZd6puJn8y7Y2Y";
-    private static final String KEY_SECRET = "hONgIwCseqXJeuFv3abmMJ0X";
+    @Value("${razorpay.key.id:}")
+    private String keyId;
+
+    @Value("${razorpay.key.secret:}")
+    private String keySecret;
+
+    @Value("${razorpay.demo-mode:false}")
+    private boolean demoMode;
 
     @PostMapping("/razorpay-order")
     public ResponseEntity<?> createOrder(@RequestBody RazorRequest razorReq) {
+        if (razorReq.amount <= 0) {
+            return ResponseEntity.badRequest().body("Invalid amount");
+        }
+
+        if (demoMode) {
+            return ResponseEntity.ok(new RazorResponse(
+                "demo_order_" + System.currentTimeMillis(),
+                "demo_key",
+                true,
+                "Demo mode — no real charge"
+            ));
+        }
+
+        if (keyId.isBlank() || keySecret.isBlank()) {
+            return ResponseEntity.status(500).body("Razorpay keys not configured");
+        }
+
         try {
-            RazorpayClient client = new RazorpayClient(KEY_ID, KEY_SECRET);
+            RazorpayClient client = new RazorpayClient(keyId, keySecret);
 
             JSONObject options = new JSONObject();
-            options.put("amount", razorReq.amount * 100); // amount in paise
+            options.put("amount", Math.round(razorReq.amount * 100));
             options.put("currency", "INR");
-            options.put("receipt", "txn_" + System.currentTimeMillis());
+            options.put("receipt", "retro_order_" + System.currentTimeMillis());
 
             Order order = client.orders.create(options);
-
-            return ResponseEntity.ok(new RazorResponse(order.get("id"), KEY_ID));
+            return ResponseEntity.ok(new RazorResponse(order.get("id"), keyId, false, null));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Error creating Razorpay order: " + e.getMessage());
+            return ResponseEntity.status(500).body("Razorpay error: " + e.getMessage());
         }
     }
 
-    // Request class for incoming data
     static class RazorRequest {
-        public int amount;
+        public double amount;
     }
 
-    // Response class for frontend
     static class RazorResponse {
         public String orderId;
         public String key;
-        public RazorResponse(String orderId, String key) {
+        public boolean demo;
+        public String message;
+
+        public RazorResponse(String orderId, String key, boolean demo, String message) {
             this.orderId = orderId;
             this.key = key;
+            this.demo = demo;
+            this.message = message;
         }
     }
 }

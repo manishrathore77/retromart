@@ -59,15 +59,43 @@ public List<Order> getAllOrders() throws SQLException {
 }
 
 
-public boolean confirmPayment(int orderId, String transactionId, String paymentStatus) throws SQLException {
-    String sql = "UPDATE orders SET transaction_id=?, payment_status=? WHERE order_id=?";
+public boolean confirmPayment(int orderId, String transactionId, String paymentStatus, String paymentMode) throws SQLException {
+    String sql = "UPDATE orders SET transaction_id=?, payment_status=?, delivery_status='processing', payment_mode=COALESCE(?, payment_mode) WHERE order_id=?";
     try (Connection conn = RetroConnection.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
         stmt.setString(1, transactionId);
         stmt.setString(2, paymentStatus);
-        stmt.setInt(3, orderId);
+        stmt.setString(3, paymentMode);
+        stmt.setInt(4, orderId);
         return stmt.executeUpdate() == 1;
     }
+}
+
+public Order getOrderById(int orderId) throws SQLException {
+    String sql = "SELECT * FROM orders WHERE order_id = ?";
+    try (Connection conn = RetroConnection.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, orderId);
+        try (ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) return mapOrder(rs);
+        }
+    }
+    return null;
+}
+
+private Order mapOrder(ResultSet rs) throws SQLException {
+    Order o = new Order();
+    o.setOrderId(rs.getInt("order_id"));
+    o.setBuyerId(rs.getInt("buyer_id"));
+    o.setProductId(rs.getInt("product_id"));
+    o.setOrderDate(rs.getString("order_date"));
+    o.setPaymentStatus(rs.getString("payment_status"));
+    o.setDeliveryStatus(rs.getString("delivery_status"));
+    o.setShippingAddress(rs.getString("shipping_address"));
+    o.setContactPhone(rs.getString("contact_phone"));
+    o.setPaymentMode(rs.getString("payment_mode"));
+    o.setTransactionId(rs.getString("transaction_id"));
+    return o;
 }
 
 

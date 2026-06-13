@@ -36,15 +36,23 @@ public class OrderController {
         }
     }
 
-
-
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getOrder(@PathVariable int id) {
+        try {
+            Order order = orderDAO.getOrderById(id);
+            return order != null ? ResponseEntity.ok(order) : ResponseEntity.notFound().build();
+        } catch (SQLException e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
 
 @PutMapping("/{id}/confirm")
 public ResponseEntity<?> confirmPayment(@PathVariable int id, @RequestBody Order updatedOrder) {
     try {
-        boolean ok = orderDAO.confirmPayment(id, updatedOrder.getTransactionId(), updatedOrder.getPaymentStatus());
-        return ok ? ResponseEntity.ok("Payment confirmed")
-                  : ResponseEntity.status(404).body("Order not found");
+        boolean ok = orderDAO.confirmPayment(id, updatedOrder.getTransactionId(), updatedOrder.getPaymentStatus(), updatedOrder.getPaymentMode());
+        if (!ok) return ResponseEntity.status(404).body("Order not found");
+        Order order = orderDAO.getOrderById(id);
+        return ResponseEntity.ok(order);
     } catch (SQLException e) {
         return ResponseEntity.status(500).body("Error: " + e.getMessage());
     }

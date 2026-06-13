@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RetroMart – Online Shopping</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="page-content">
+    <section class="hero-banner">
+      <h1>Great Deals, Delivered Fast</h1>
+      <p>Shop thousands of products at unbeatable prices. Free delivery on orders above ₹499.</p>
+      <a href="product-list.html" class="hero-cta">Shop Now →</a>
+    </section>
+
+    <section class="deals-row">
+      <a href="product-list.html" class="deal-card">
+        <div class="deal-icon">⚡</div>
+        <h3>Flash Sale</h3>
+        <p>Up to 70% off</p>
+      </a>
+      <a href="/product-list.html?category=electronics" class="deal-card">
+        <div class="deal-icon">📱</div>
+        <h3>Electronics</h3>
+        <p>Latest gadgets</p>
+      </a>
+      <a href="/product-list.html?category=fashion" class="deal-card">
+        <div class="deal-icon">👗</div>
+        <h3>Fashion</h3>
+        <p>Trending styles</p>
+      </a>
+      <a href="/product-list.html?category=home" class="deal-card">
+        <div class="deal-icon">🏠</div>
+        <h3>Home & Living</h3>
+        <p>Decor & more</p>
+      </a>
+      <a href="register.html" class="deal-card">
+        <div class="deal-icon">🏪</div>
+        <h3>Become a Seller</h3>
+        <p>Start selling today</p>
+      </a>
+    </section>
+
+    <section>
+      <div class="section-header">
+        <h2>Top Picks for You</h2>
+        <a href="product-list.html">See all →</a>
+      </div>
+      <div class="product-grid" id="featuredGrid"></div>
+    </section>
+  </main>
+
+  <div id="app-footer"></div>
+  <script src="/js/common.js"></script>
+  <script>
+    async function loadFeatured() {
+      const res = await fetch('/api/products');
+      if (!res.ok) return;
+      const products = await res.json();
+      const grid = document.getElementById('featuredGrid');
+      await RetroMart.loadProductsIntoGrid(grid, products.slice(0, 8));
+    }
+    document.addEventListener('DOMContentLoaded', loadFeatured);
+  </script>
+</body>
+</html>

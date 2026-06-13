@@ -5,6 +5,7 @@ public class Product {
     private String title;
     private String description;
     private double price;
+    private String category;
 
     // Getter and Setter for productId
     public int getProductId() {
@@ -44,5 +45,13 @@ public class Product {
     }
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

@@ -1,146 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Product Details</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #f9f9f9;
-      padding: 30px;
-    }
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
-      text-align: center;
-    }
-    .title {
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .price {
-      color: green;
-      font-size: 20px;
-      margin: 10px 0;
-    }
-    .desc {
-      margin: 15px 0;
-      line-height: 1.5;
-    }
-    .gallery-container {
-      position: relative;
-      margin-top: 20px;
-    }
-    .gallery-container img {
-      width: 300px;
-      height: auto;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-    }
-    .gallery-buttons {
-      margin-top: 10px;
-    }
-    .gallery-buttons button {
-      padding: 10px 15px;
-      margin: 0 5px;
-      border: none;
-      background: teal;
-      color: white;
-      cursor: pointer;
-      border-radius: 6px;
-    }
-    .buy-btn {
-      margin-top: 25px;
-      background: #006d6d;
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details – RetroMart</title>
+  <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
+  <div id="app-header"></div>
 
-<div class="container">
-  <div class="title" id="title">Loading...</div>
-  <div class="price" id="price"></div>
-  <div class="desc" id="description"></div>
-
-  <div class="gallery-container">
-    <img id="galleryImage" src="" alt="Product Image" />
-    <div class="gallery-buttons">
-      <button onclick="prevImage()">Prev</button>
-      <button onclick="nextImage()">Next</button>
+  <main class="page-content">
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="index.html">Home</a>
+      <span>›</span>
+      <a href="product-list.html">Products</a>
+      <span>›</span>
+      <span id="breadcrumbTitle">Loading...</span>
     </div>
-  </div>
 
-  <button class="buy-btn" onclick="buyProduct()">Buy Now</button>
-</div>
+    <div class="product-detail" id="productDetail">
+      <div class="gallery-section">
+        <img id="galleryImage" class="gallery-main" src="" alt="Product" />
+        <div class="gallery-thumbs" id="galleryThumbs"></div>
+      </div>
 
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const productId = urlParams.get("pid");
-  let images = [];
-  let currentIndex = 0;
+      <div class="detail-section">
+        <h1 id="title">Loading...</h1>
+        <div class="detail-rating">
+          <span class="stars" id="ratingStars"></span>
+          <span class="rating-count" id="ratingCount"></span>
+        </div>
+        <div>
+          <span class="detail-price" id="price"></span>
+          <span class="detail-mrp" id="mrp"></span>
+        </div>
+        <p class="text-muted" style="font-size:13px;margin:4px 0 0;" id="discountText"></p>
 
-  async function loadProduct() {
-    try {
-      const pRes = await fetch(`/api/products/${productId}`);
-      if (!pRes.ok) throw new Error("Product not found");
-      const product = await pRes.json();
+        <ul class="detail-offers" id="offers">
+          <li>🏷️ Bank Offer: 10% off on HDFC Credit Cards</li>
+          <li>🚚 Free delivery on orders above ₹499</li>
+          <li>↩️ 7-day easy return policy</li>
+        </ul>
 
-      document.getElementById("title").textContent = product.title;
-      document.getElementById("price").textContent = "₹ " + product.price;
-      document.getElementById("description").textContent = product.description;
+        <div class="delivery-box">
+          <span>📍</span>
+          <div>
+            <strong style="font-size:13px;">Deliver to</strong>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+              <input type="text" placeholder="Enter pincode" maxlength="6" id="pincode" />
+              <button class="btn btn-outline" style="padding:8px 16px;" onclick="checkPincode()">Check</button>
+            </div>
+            <p id="pincodeMsg" style="font-size:12px;margin:6px 0 0;color:var(--success);"></p>
+          </div>
+        </div>
 
-      const imgRes = await fetch(`/api/images/product/${productId}`);
-      images = await imgRes.json();
+        <p class="detail-desc" id="description"></p>
 
-      if (images.length > 0) {
-        currentIndex = 0;
-        updateImage();
-      } else {
-        document.getElementById("galleryImage").alt = "No image found";
+        <div class="action-buttons">
+          <button class="btn btn-primary btn-lg" onclick="buyProduct()">Buy Now</button>
+          <button class="btn btn-secondary btn-lg" onclick="buyProduct()">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+  <script src="/js/common.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('pid');
+    let images = [];
+    let currentIndex = 0;
+
+    async function loadProduct() {
+      try {
+        const pRes = await fetch(`/api/products/${productId}`);
+        if (!pRes.ok) throw new Error('Not found');
+        const product = await pRes.json();
+
+        document.getElementById('title').textContent = product.title;
+        document.getElementById('breadcrumbTitle').textContent = product.title;
+        document.title = product.title + ' – RetroMart';
+
+        const { rating, count } = RetroMart.fakeRating(product.productId);
+        const { mrp, pct } = RetroMart.fakeDiscount(product.price);
+
+        document.getElementById('price').textContent = '₹' + Number(product.price).toLocaleString('en-IN');
+        document.getElementById('mrp').textContent = '₹' + mrp.toLocaleString('en-IN');
+        document.getElementById('discountText').textContent = `${pct}% off · Inclusive of all taxes`;
+        document.getElementById('ratingStars').textContent = RetroMart.renderStars(parseFloat(rating));
+        document.getElementById('ratingCount').textContent = `${rating} (${count} ratings)`;
+        document.getElementById('description').textContent = product.description || 'No description available.';
+
+        const imgRes = await fetch(`/api/images/product/${productId}`);
+        images = await imgRes.json();
+
+        if (images.length > 0) {
+          currentIndex = 0;
+          updateImage();
+          renderThumbs();
+        } else {
+          document.getElementById('galleryImage').src = 'https://via.placeholder.com/400?text=No+Image';
+        }
+      } catch {
+        document.getElementById('productDetail').innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">❌</div><h3>Product not found</h3><p><a href="product-list.html">← Back to products</a></p></div>';
       }
-    } catch (err) {
-      document.querySelector(".container").innerHTML = "<h3>❌ Product not found</h3>";
     }
-  }
 
-  function updateImage() {
-    const img = images[currentIndex];
-    if (img && img.imageUrl) {
-      const imgEl = document.getElementById("galleryImage");
-      imgEl.src = img.imageUrl.startsWith("http") ? img.imageUrl : img.imageUrl;
+    function renderThumbs() {
+      const container = document.getElementById('galleryThumbs');
+      container.innerHTML = '';
+      images.forEach((img, i) => {
+        const thumb = document.createElement('img');
+        thumb.src = img.imageUrl;
+        thumb.alt = 'Thumbnail ' + (i + 1);
+        if (i === currentIndex) thumb.classList.add('active');
+        thumb.onclick = () => { currentIndex = i; updateImage(); renderThumbs(); };
+        container.appendChild(thumb);
+      });
     }
-  }
 
-  function prevImage() {
-    if (images.length > 0) {
-      currentIndex = (currentIndex - 1 + images.length) % images.length;
-      updateImage();
+    function updateImage() {
+      const img = images[currentIndex];
+      if (img?.imageUrl) {
+        document.getElementById('galleryImage').src = img.imageUrl;
+      }
     }
-  }
 
-  function nextImage() {
-    if (images.length > 0) {
-      currentIndex = (currentIndex + 1) % images.length;
-      updateImage();
+    function checkPincode() {
+      const pin = document.getElementById('pincode').value.trim();
+      const msg = document.getElementById('pincodeMsg');
+      if (pin.length === 6 && /^\d+$/.test(pin)) {
+        msg.textContent = '✓ Delivery available by ' + new Date(Date.now() + 3 * 86400000).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        msg.style.color = 'var(--success)';
+      } else {
+        msg.textContent = 'Please enter a valid 6-digit pincode';
+        msg.style.color = 'var(--danger)';
+      }
     }
-  }
 
-  function buyProduct() {
-    window.location.href = `place-order.html?pid=${productId}`;
-  }
+    function buyProduct() {
+      const user = RetroMart.getUser();
+      if (!user) {
+        alert('Please sign in to continue');
+        window.location.href = 'login.html';
+        return;
+      }
+      window.location.href = `place-order.html?pid=${productId}`;
+    }
 
-  loadProduct();
-</script>
-
+    loadProduct();
+  </script>
 </body>
 </html>

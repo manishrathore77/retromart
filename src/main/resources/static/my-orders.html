@@ -1,101 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>My Orders</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f4f4;
-      padding: 40px;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      text-align: left;
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-    }
-    th {
-      background: #006d6d;
-      color: white;
-    }
-    tr:hover {
-      background: #f1f1f1;
-    }
-    .status {
-      font-weight: bold;
-    }
-    .status.paid { color: green; }
-    .status.pending { color: orange; }
-    .status.failed { color: red; }
-    .status.delivered { color: teal; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders – RetroMart</title>
+  <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-  <div class="container">
-    <h2>🛒 My Orders</h2>
-    <table id="ordersTable">
-      <thead>
-        <tr>
-          <th>Order ID</th>
-          <th>Product Title</th>
-          <th>Payment</th>
-          <th>Delivery</th>
-          <th>Order Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Orders go here -->
-      </tbody>
-    </table>
-  </div>
+  <div id="app-header"></div>
 
+  <main class="page-content">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <span>›</span>
+      <span>Your Orders</span>
+    </div>
+
+    <h1 class="page-title">Returns & Orders</h1>
+    <p class="text-muted" style="margin:-8px 0 20px;font-size:14px;">Track your order from placement to delivery</p>
+
+    <div class="orders-list" id="ordersList"></div>
+
+    <div class="empty-state hidden" id="emptyOrders">
+      <div class="empty-icon">📦</div>
+      <h3>No orders yet</h3>
+      <p>Start shopping to see your orders here.</p>
+      <a href="product-list.html" class="btn btn-primary mt-2">Browse Products</a>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+  <script src="/js/common.js"></script>
   <script>
-    const buyerId = JSON.parse(localStorage.getItem("user"))?.userId;
-    if (!buyerId) {
-      alert("Login first to see orders");
-      window.location.href = "login.html";
+    async function init() {
+      const user = await RetroMart.restoreSession();
+      if (!user) {
+        alert('Please sign in to view orders');
+        window.location.href = 'login.html?redirect=my-orders.html';
+        return;
+      }
+      loadOrders(user.userId);
     }
 
-    async function loadOrders() {
+    async function loadOrders(buyerId) {
       const res = await fetch(`/api/orders/buyer/${buyerId}`);
       const orders = await res.json();
+      const container = document.getElementById('ordersList');
 
-      const tbody = document.querySelector("#ordersTable tbody");
-      tbody.innerHTML = "";
+      if (!orders.length) {
+        document.getElementById('emptyOrders').classList.remove('hidden');
+        return;
+      }
 
+      container.innerHTML = '';
       for (const order of orders) {
         const pRes = await fetch(`/api/products/${order.productId}`);
-        const product = await pRes.json();
+        const product = pRes.ok ? await pRes.json() : { title: 'Unknown Product', price: 0 };
+        const imgUrl = await RetroMart.fetchProductImage(order.productId);
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${order.orderId}</td>
-          <td>${product.title}</td>
-          <td class="status ${order.paymentStatus.toLowerCase()}">${order.paymentStatus}</td>
-          <td class="status ${order.deliveryStatus.toLowerCase()}">${order.deliveryStatus}</td>
-          <td>${new Date(order.orderDate).toLocaleString()}</td>
-        `;
-        tbody.appendChild(tr);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = RetroMart.buildOrderCardHtml(order, product, imgUrl);
+        container.appendChild(wrapper.firstElementChild);
       }
     }
 
-    loadOrders();
+    init();
   </script>
 </body>
 </html>

@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class RetroConnection {
 
     private static final String URL =
-            "jdbc:mysql://localhost:3306/retrodb?useSSL=false&serverTimezone=UTC";
+            "jdbc:mysql://localhost:3306/retrodb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     private static final String USER     = "retrouser";
     private static final String PASSWORD = "retrouser";
 
